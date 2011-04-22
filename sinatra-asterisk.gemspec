@@ -11,7 +11,7 @@ SPEC = Gem::Specification.new do |s|
 
   s.authors          = ["Dominique BROEGLIN"]
   s.email            = "dominique.broeglin@gmail.com"
-  s.files            = Dir["**/*.{rb,md,jar}"] << "LICENSE"
+  s.files            = Dir["**/*.{rb,md,jar}"] << "LICENSES"
   s.has_rdoc         = 'yard'
   s.homepage         = "http://github.com/dbroeglin/#{s.name}"
   s.require_paths    = ["lib"]

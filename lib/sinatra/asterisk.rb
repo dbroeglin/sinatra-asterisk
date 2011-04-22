@@ -38,7 +38,7 @@ module Sinatra
       # Implements AgiScript
       def service(request, channel)
         catch(:halt) do
-          block = @agi_handlers.each do |script_pattern, block|
+          block = @agi_handlers.each do |script_pattern, conditions, block|
             catch :pass do
               throw :pass unless script_pattern.nil? || script_pattern.match(request.script)
               throw :halt, AgiContext::new(request, channel).execute(&block)
@@ -72,8 +72,8 @@ module Sinatra
     end
     
     def agi(uri_pattern = nil, conditions = {}, &block)
-      uri_pattern = Regexp::new(uri) if uri_pattern
-      agi_handlers << [uri_pattern, Proc::new(&block)]
+      uri_pattern = Regexp::new(uri_pattern) if uri_pattern && !uri_pattern.respond_to?(:match)
+      agi_handlers << [uri_pattern, conditions, Proc::new(&block)]
     end
     
     private
