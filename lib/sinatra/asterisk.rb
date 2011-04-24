@@ -1,47 +1,50 @@
 require 'sinatra/base'
 require 'java'
-require File.expand_path(File.dirname(__FILE__)) + '/asterisk-java-0.3.1.jar'
+require File.expand_path(__FILE__ + '/../asterisk/asterisk-java-1.0.0.M3.jar')
 
 module Sinatra
   module Asterisk
     java_import org.asteriskjava.fastagi.BaseAgiScript
     java_import org.asteriskjava.fastagi.MappingStrategy
     java_import org.asteriskjava.fastagi.DefaultAgiServer
-    
+    java_import org.asteriskjava.manager.ManagerConnectionFactory
+
     module Helpers
-    end
-    
-    # TODO: implement proxy to Sinatra::Application ?
-    class AgiContext
-      instance_methods.each { |m| undef_method m unless m =~ /^(__|instance_eval)/ }
-      attr_reader :request, :channel
-      
-      def initialize(*args)
-        @request, @channel = *args
-      end
-      
-      def execute(&block)
-        instance_eval(&block)
-      end
     end
 
     class SinatraAgiScript < BaseAgiScript
-      attr_accessor :agi_handlers
-
       include MappingStrategy
+      attr_accessor :agi_handlers, :sinatra_app
       
       # Implements MappingStrategy
       def determineScript(request)
         self
       end
-      
+     
+      def eval_in_sinatra(request, channel, &block)
+          sinatra = sinatra_app::new!
+          sinatra_eigenclass = (class <<sinatra; self; end)
+          sinatra_eigenclass.class_eval do
+              # TODO: do this with a module ?
+              define_method :request do
+                  request
+              end
+
+              define_method :channel do
+                  channel
+              end
+          end
+
+          sinatra.instance_eval(&block)
+      end
+
       # Implements AgiScript
       def service(request, channel)
         catch(:halt) do
           block = @agi_handlers.each do |script_pattern, conditions, block|
             catch :pass do
               throw :pass unless script_pattern.nil? || script_pattern.match(request.script)
-              throw :halt, AgiContext::new(request, channel).execute(&block)
+              throw :halt, eval_in_sinatra(request, channel, &block) 
             end
           end
         end
@@ -49,11 +52,12 @@ module Sinatra
     end
     
     def start_agi_server
-      agi_script = SinatraAgiScript::new()
-      agi_script.agi_handlers = agi_handlers
+      @agi_script = SinatraAgiScript::new
+      @agi_script.agi_handlers = agi_handlers
+      @agi_script.sinatra_app  = self
       
       @agi_server = DefaultAgiServer::new()
-      @agi_server.mappingStrategy = agi_script
+      @agi_server.mappingStrategy = @agi_script
       Thread.new do
         begin
           @agi_server.startup

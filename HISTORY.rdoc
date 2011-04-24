@@ -1,0 +1,14 @@
+=== 0.0.2 / 2011-04-24
+
+ * Moved to Asterisk-Java v1.0.0.M3.
+
+ * AGI handlers now are evaluated in a sinatra application scope
+   like route handlers.
+
+ * Correct ManagerConnectionFactory initialisation
+
+=== 0.0.1 / 2011-04-21
+
+ * First working version (simple AGI and manager connection but
+   no manager event handling).
+
