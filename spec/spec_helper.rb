@@ -1,4 +1,6 @@
+
 require "sinatra/asterisk"
+require "sinatra" # required for classical style testing
 
 def mock_request(script, headers = {})
   unless @mock_request

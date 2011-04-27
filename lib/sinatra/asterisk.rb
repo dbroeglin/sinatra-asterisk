@@ -82,12 +82,15 @@ module Sinatra
       end
     end
     
-    def start_agi_server
+    def start_agi_server(port = 4573)
       @agi_script = SinatraAgiScript::new
       @agi_script.agi_handlers = agi_handlers
-      @agi_script.sinatra_app  = self
+
+      # this is a hack; settings returns the Sinatra class
+      @agi_script.sinatra_app = settings 
       
       @agi_server = DefaultAgiServer::new()
+      @agi_server.port = port
       @agi_server.mappingStrategy = @agi_script
       Thread.new do
         begin
@@ -108,7 +111,7 @@ module Sinatra
     end
 
     def initialize_manager_event_listener(manager_connection)
-      @manager_event_listener = SinatraManagerEventListener::new(event_handlers, self)
+      @manager_event_listener = SinatraManagerEventListener::new(event_handlers, settings)
       manager_connection.addEventListener(@manager_event_listener)
     end
 

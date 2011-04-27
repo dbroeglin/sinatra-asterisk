@@ -1,3 +1,6 @@
+# store top level for use during the tests
+$top_level = self
+
 require File.expand_path(__FILE__ + "/../../spec_helper.rb")
 
 class Sinatra::Asterisk::TestApp < Sinatra::Application 
@@ -44,6 +47,15 @@ describe Sinatra::Asterisk::TestApp do
       @mock_request.should_not_receive(:helper_was_called)
 
       Sinatra::Asterisk::TestApp.instance_variable_get("@agi_script").service(@mock_request, nil)
+    end
+
+    it "should access the request scope from a classical AGI" do
+      mock_request("test_top_level").should_receive(:block_was_called)
+      $top_level.send :agi, /^test_top_level$/ do
+        request.block_was_called
+      end
+      $top_level.send :start_agi_server, 4574
+      Sinatra::Application.instance_variable_get("@agi_script").service(@mock_request, nil)
     end
   end
   describe "when receiving a ManagerEvent" do
