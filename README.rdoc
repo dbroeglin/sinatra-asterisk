@@ -1,0 +1,34 @@
+= Sinatra::Asterisk
+
+Basic Sinatra.rb (http://sinatrarb.com) extension to control an Asterisk IPBX.
+
+== Disclaimer
+
+Sinatra::Asterisk is a work in progress. Use with caution !
+
+== Installation
+
+    gem install sinatra-asterisk
+
+== Usage example
+
+    require "sinatra/asterisk"
+    
+    get '/' do
+      "Hello world"
+    end
+
+    agi do
+      answer
+      play "sound/helloworld"
+      hangup
+    end
+
+    on_event do
+      puts event.inspect
+    end
+
+== Legal
+
+Author:: Dominique Broeglin <dominique.broeglin@gmail.com> 
+License:: Copyright (c) 2011 Dominique Broeglin, released under the MIT license
