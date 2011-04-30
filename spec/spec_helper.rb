@@ -32,3 +32,10 @@ def mock_manager
   end
   @mock_manager
 end
+
+def mock_channel
+  unless @mock_channel
+    @mock_channel = mock('MockChannel')
+  end
+  @mock_channel
+end

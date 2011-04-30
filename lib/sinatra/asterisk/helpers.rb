@@ -54,6 +54,33 @@ module Sinatra
         end
         manager.send_action action
       end
+
+      def play(*args)
+        channel.streamFile(*args) 
+      end
+
+      def start_music_on_hold(*args)
+        channel.startMusicOnHold(*args)
+      end
+
+      def stop_music_on_hold
+        channel.stopMusicOnHold
+      end
+
+      def hangup
+        channel.hangup
+      end
+
+      def answer
+        channel.answer
+      end
+
+      def exec(app, options = "")
+        if options.kind_of? Array
+          options = options.join(",")
+        end
+        channel.exec app.to_s, options.to_s
+      end
     end
   end
 end

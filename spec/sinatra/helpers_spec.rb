@@ -7,14 +7,14 @@ end
 
 self.class.send :include_package, "org.asteriskjava.manager.action"
 
-describe Sinatra::Asterisk::HelpersTestApp::new! do
+describe Sinatra::Asterisk::HelpersTestApp::new!, "#send_action " do
 
   before do
     Sinatra::Asterisk::HelpersTestApp::set :manager, mock_manager
   end
 
 
-  it "should send action the Java way" do
+  it "should send an action the Java way" do
     action = PingAction::new 
     mock_manager.should_receive(:send_action).with(action)
 
@@ -68,6 +68,33 @@ describe Sinatra::Asterisk::HelpersTestApp::new! do
     end
 
     subject.send_action OriginateAction, :exten => "foo", :priority => 1
+  end
+end
+
+describe Sinatra::Asterisk::HelpersTestApp::new! "#exec" do
+  before do
+    subject.channel = mock_channel
+  end
+
+  it "should delegate to channel" do
+    mock_channel.should_receive(:exec).twice.with("App", "").and_return(1)
+
+    subject.exec("App").should == 1
+    subject.exec(:App).should == 1
+  end
+
+  it "should delegate to channel with options" do
+    mock_channel.should_receive(:exec).twice.with("App", "Options").and_return(1)
+
+    subject.exec("App", "Options").should == 1
+    subject.exec(:App,  :Options).should == 1
+  end
+  
+  it "should join options" do
+    options = ["a", "b", "c"]
+    mock_channel.should_receive(:exec).with("App", options.join(",")).and_return(2)
+
+    subject.exec("App", options).should == 2
   end
 end
 
