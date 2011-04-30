@@ -3,6 +3,7 @@ require 'java'
 require File.expand_path(__FILE__ + '/../asterisk/asterisk-java-1.0.0.M3.jar')
 
 require 'sinatra/asterisk/utils'
+require 'sinatra/asterisk/helpers'
 
 module Sinatra
   module Asterisk
@@ -13,9 +14,6 @@ module Sinatra
     java_import org.asteriskjava.manager.ManagerEventListener
 
 
-    module Helpers
-    end
-
     class SinatraAgiScript < BaseAgiScript
       include MappingStrategy
       attr_accessor :agi_handlers, :sinatra_app
@@ -25,17 +23,6 @@ module Sinatra
         self
       end
      
-      def eval_in_sinatra(request, channel, &block)
-          sinatra = sinatra_app::new!
-          sinatra_eigenclass = (class <<sinatra; self; end)
-          sinatra_eigenclass.class_eval do
-              # TODO: do this with a module ?
-              define_method(:request) { request } 
-              define_method(:channel) { channel } 
-          end
-
-          sinatra.instance_eval(&block)
-      end
 
       # Implements AgiScript
       def service(request, channel)
@@ -48,6 +35,15 @@ module Sinatra
           end
         end
       end
+
+      private
+      
+      # evaluate block in a Sinatra instance
+      def eval_in_sinatra(request, channel, &block)
+          sinatra = sinatra_app::new!
+          sinatra.request, sinatra.channel = request, channel
+          sinatra.instance_eval(&block)
+      end
     end
 
     class SinatraManagerEventListener
@@ -59,12 +55,7 @@ module Sinatra
       
       def eval_in_sinatra(event, &block)
           sinatra = @sinatra_app::new!
-          sinatra_eigenclass = (class <<sinatra; self; end)
-          sinatra_eigenclass.class_eval do
-              # TODO: do this with a module ?
-              define_method(:event) { event }
-          end
-
+          sinatra.event = event
           sinatra.instance_eval(&block)
       end
 

@@ -10,10 +10,12 @@ class Sinatra::Asterisk::TestApp < Sinatra::Application
 
   helpers do
     def test_request_helper
+      manager
       request.helper_was_called
     end
 
     def test_event_helper
+      manager
       event.helper_was_called
     end
   end
@@ -38,7 +40,7 @@ describe Sinatra::Asterisk::TestApp do
     it "should access the request scope from an AGI" do
       mock_request("test").should_receive(:block_was_called)
       @mock_request.should_receive(:helper_was_called)
-
+      Sinatra::Asterisk::TestApp.set :manager, mock("MockManager") 
       Sinatra::Asterisk::TestApp.instance_variable_get("@agi_script").service(@mock_request, nil)
     end
 

@@ -1,4 +1,4 @@
-
+require "java"
 require "sinatra/asterisk"
 require "sinatra" # required for classical style testing
 
@@ -26,3 +26,9 @@ def mock_event()
   @mock_event
 end
 
+def mock_manager
+  unless @mock_manager
+    @mock_manager = mock('MockManager')
+  end
+  @mock_manager
+end
