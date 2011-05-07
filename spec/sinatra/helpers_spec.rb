@@ -77,7 +77,7 @@ describe Sinatra::Asterisk::HelpersTestApp::new! "#exec" do
   end
 
   it "should delegate to channel" do
-    mock_channel.should_receive(:exec).twice.with("App").and_return(1)
+    mock_channel.should_receive(:exec).twice.with("App", "").and_return(1)
 
     subject.exec("App").should == 1
     subject.exec(:App).should == 1

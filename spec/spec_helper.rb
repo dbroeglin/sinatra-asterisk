@@ -1,10 +1,10 @@
 require "java"
 require "sinatra/asterisk"
-require "sinatra" # required for classical style testing
+require "sinatra" # needed to test classical style
 
-def mock_request(script, headers = {})
+def mock_request(script = "test" , headers = {})
   unless @mock_request
-    @mock_request = mock('MockAgiRequest')
+    @mock_request = mock("MockAgiRequest[script=#{script}]")
     @mock_request.stub!(
         :extension  => "test",
         :priority   => "1",

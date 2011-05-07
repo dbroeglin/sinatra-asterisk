@@ -22,27 +22,36 @@ module Sinatra
       def determineScript(request)
         self
       end
-     
 
-      # Implements AgiScript
+      # Implements AgiScript (handles an AGI request and possible exceptions)
       def service(request, channel)
+        sinatra = sinatra_app::new!
+        sinatra.instance_eval do
+          # simulate Sinatra env, TODO: review
+          @env = {} 
+          @env['rack.errors'] = $stderr 
+          @response = Struct.new(:status).new
+        end
+        service! sinatra, request, channel
+      end
+
+      def service!(sinatra, request, channel)
         catch(:halt) do
-          block = @agi_handlers.each do |script_pattern, conditions, block|
+          @agi_handlers.each do |script_pattern, conditions, block|
             catch :pass do
               throw :pass unless script_pattern.nil? || script_pattern.match(request.script)
-              throw :halt, eval_in_sinatra(request, channel, &block) 
+              throw :halt, eval_in_sinatra(sinatra, request, channel, &block) 
             end
           end
         end
+      rescue ::Exception => boom
+        sinatra.__send__ :handle_exception!, boom
       end
-
-      private
       
       # evaluate block in a Sinatra instance
-      def eval_in_sinatra(request, channel, &block)
-          sinatra = sinatra_app::new!
-          sinatra.request, sinatra.channel = request, channel
-          sinatra.instance_eval(&block)
+      def eval_in_sinatra(sinatra, request, channel, &block)
+        sinatra.request, sinatra.channel = request, channel
+        sinatra.instance_eval(&block)
       end
     end
 
@@ -72,22 +81,27 @@ module Sinatra
         end
       end
     end
-    
-    def start_agi_server(port = 4573)
+  
+    attr_reader :agi_script
+    def start_agi_server(options = {})
+      options = { :port => 4573 }.merge(options)
       @agi_script = SinatraAgiScript::new
       @agi_script.agi_handlers = agi_handlers
 
       # this is a hack; settings returns the Sinatra class
-      @agi_script.sinatra_app = settings 
+      @agi_script.sinatra_app = self 
       
       @agi_server = DefaultAgiServer::new()
-      @agi_server.port = port
+      @agi_server.port = options[:port]
       @agi_server.mappingStrategy = @agi_script
-      Thread.new do
-        begin
-          @agi_server.startup
-        rescue  => e
-          puts "ERROR: #{e}: #{e.backtrace.join("\n")}"
+      unless options.has_key? :noop
+        Thread.new do
+          begin
+            @agi_server.startup
+          rescue  => e
+            # TODO: handle this one
+            puts "ERROR: #{e}: #{e.backtrace.join("\n")}"
+          end
         end
       end
     end

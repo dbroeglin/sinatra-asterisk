@@ -6,7 +6,7 @@ require File.expand_path(__FILE__ + "/../../spec_helper.rb")
 class Sinatra::Asterisk::TestApp < Sinatra::Application 
   include Sinatra::Asterisk
 
-  start_agi_server
+  start_agi_server :noop => true
 
   helpers do
     def test_request_helper
@@ -56,7 +56,7 @@ describe Sinatra::Asterisk::TestApp do
       $top_level.send :agi, /^test_top_level$/ do
         request.block_was_called
       end
-      $top_level.send :start_agi_server, 4574
+      $top_level.send :start_agi_server, :noop => true 
       Sinatra::Application.instance_variable_get("@agi_script").service(@mock_request, nil)
     end
   end
