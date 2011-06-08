@@ -70,10 +70,9 @@ describe Sinatra::Asterisk::TestApp do
     end
 
     it "should call handler for ReloadEvent" do
-      ev = org.asteriskjava.manager.event.ReloadEvent::new("source")
-      ev.should_receive(:reload_event_block_was_called)
+      mock_event.should_receive(:reload_event_block_was_called)
 
-      Sinatra::Asterisk::TestApp.instance_variable_get("@manager_event_listener").onManagerEvent(ev)
+      Sinatra::Asterisk::TestApp.instance_variable_get("@manager_event_listener").onManagerEvent(mock_event)
     end
   end
 end

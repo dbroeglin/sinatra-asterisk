@@ -19,9 +19,10 @@ def mock_request(script = "test" , headers = {})
   @mock_request
 end
 
-def mock_event()
+def mock_event(name = :Reload, *args)
+  args = ["mock_source"] if args.empty?
   unless @mock_event
-    @mock_event = mock('MockManagerEvent')
+    @mock_event = eval("org.asteriskjava.manager.event.#{name}Event")::new(*args)
   end
   @mock_event
 end

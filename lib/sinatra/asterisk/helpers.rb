@@ -27,6 +27,13 @@ module Sinatra
         settings.manager
       end
 
+      def _simulate_env
+        # simulate Sinatra env, TODO: review
+        @env = {} 
+        @env['rack.errors'] = $stderr 
+        @response = Struct.new(:status).new
+      end
+
       #
       # AGI helpers
       #

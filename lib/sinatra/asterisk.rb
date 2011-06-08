@@ -26,12 +26,7 @@ module Sinatra
       # Implements AgiScript (handles an AGI request and possible exceptions)
       def service(request, channel)
         sinatra = sinatra_app::new!
-        sinatra.instance_eval do
-          # simulate Sinatra env, TODO: review
-          @env = {} 
-          @env['rack.errors'] = $stderr 
-          @response = Struct.new(:status).new
-        end
+        sinatra._simulate_env
         service! sinatra, request, channel
       end
 
@@ -62,22 +57,27 @@ module Sinatra
         @event_handlers, @sinatra_app = *args 
       end
       
-      def eval_in_sinatra(event, &block)
-          sinatra = @sinatra_app::new!
+      def eval_in_sinatra(sinatra, event, &block)
           sinatra.event = event
           sinatra.instance_eval(&block)
       end
 
       # implements ManagerEventListener
       def onManagerEvent(event)
-        event_name = event.class.name.gsub(/^.*::/, '').gsub(/Event$/, '')
-        catch(:halt) do
-          block = @event_handlers.each do |event_class, block|
-            catch :pass do
-              throw :pass unless event_class.nil? || Utils::camelize(event_class) == event_name
-              throw :halt, eval_in_sinatra(event, &block) 
+        sinatra = @sinatra_app::new!
+        sinatra._simulate_env
+        begin
+          event_name = event.class.name.gsub(/^.*::/, '').gsub(/Event$/, '')
+          catch(:halt) do
+            block = @event_handlers.each do |event_class, block|
+              catch :pass do
+                throw :pass unless event_class.nil? || Utils::camelize(event_class) == event_name
+                throw :halt, eval_in_sinatra(sinatra, event, &block) 
+              end
             end
           end
+        rescue ::Exception => boom
+          sinatra.__send__ :handle_exception!, boom
         end
       end
     end
